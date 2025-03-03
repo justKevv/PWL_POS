@@ -13,15 +13,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        $data = [
-            'id_level' => 2,
-            'username' => 'third_manager',
-            'name' => 'Third Manager',
-            'password' => Hash::make('12345'),
-        ];
-        UserModel::create($data);
-
-        $user = UserModel::all();
+        $user = UserModel::findOr(20, ['username', 'name'], function (){
+            abort(404);
+        });
         return view("user", compact("user"));
     }
 
