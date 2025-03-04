@@ -17,6 +17,8 @@
             <th>Username</th>
             <th>Name</th>
             <th>ID Level</th>
+            <th>Code Level</th>
+            <th>Level Name</th>
             <th>Action</th>
         </tr>
         @foreach ($user as $u)
@@ -25,6 +27,8 @@
                 <td>{{ $u->username }}</td>
                 <td>{{ $u->name }}</td>
                 <td>{{ $u->id_level }}</td>
+                <td>{{ $u->level->code_level }}</td>
+                <td>{{ $u->level->name_level }}</td>
                 <td><a href="/user/edit/{{ $u->id_user }}">Update</a> | <a href="/user/delete/{{ $u->id_user }}">Delete</a>
                 </td>
             </tr>

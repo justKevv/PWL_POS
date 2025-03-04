@@ -15,4 +15,8 @@ class UserModel extends Model
     protected $fillable = [
         'id_level', 'username', 'name', 'password'
     ];
+
+    public function level() {
+        return $this->belongsTo(LevelModel::class, 'id_level','id_level');
+    }
 }
