@@ -11,4 +11,10 @@ Route::get('/', function () {
 
 Route::get('/level', [LevelController::class, 'index']);
 Route::get('/category', [CategoryController::class, 'index']);
+
 Route::get('/user', [UserController::class,'index']);
+Route::get('/user/add', [UserController::class, 'create']);
+Route::post('/user/store', [UserController::class,'store']);
+Route::get('/user/edit/{id_user}', [UserController::class, 'edit']);
+Route::put('/user/update/{id_user}', [UserController::class, 'update']);
+Route::get('/user/delete/{id_user}', [UserController::class,'destroy']);

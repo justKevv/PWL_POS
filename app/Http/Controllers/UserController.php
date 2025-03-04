@@ -13,27 +13,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        // Create a new user
-        $user = UserModel::create([
-            'username' => 'manager21',
-            'name' => 'manager21',
-            'password' => Hash::make('12345'),
-            'id_level' => 2,
-        ]);
-
-        // Update username
-        $user->username = 'manager12';
-
-        // Save changes
-        $user->save();
-
-        // wasChanged() checks
-        $user->wasChanged(); // true
-        $user->wasChanged('username'); // true
-        $user->wasChanged(['username', 'id_level']); // true
-        $user->wasChanged('name'); // false
-        $user->wasChanged(['name', 'username']); // true
-        dd($user->wasChanged(['name', 'username']));
+        $user = UserModel::all();
         return view("user", compact("user"));
     }
 
@@ -42,7 +22,7 @@ class UserController extends Controller
      */
     public function create()
     {
-
+        return view("add_user");
     }
 
     /**
@@ -50,7 +30,14 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        UserModel::create([
+            'username' => $request->username,
+            'name' => $request->name,
+            'password' => Hash::make($request->password),
+            'id_level' => $request->id_level,
+        ]);
+
+        return redirect('/user');
     }
 
     /**
@@ -64,24 +51,36 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserModel $userModel)
+    public function edit($id_user)
     {
-        //
+        $user = UserModel::find($id_user);
+        return view('update_user', compact('user'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserModel $userModel)
+    public function update(Request $request, $id_user)
     {
-        //
+        $user = UserModel::find($id_user);
+
+        $user->username = $request->username;
+        $user->name = $request->name;
+        $user->password = Hash::make($request->password);
+        $user->id_level = $request->id_level;
+
+        $user->save();
+        return redirect('/user');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserModel $userModel)
+    public function destroy($id_user)
     {
-        //
+        $user = UserModel::find($id_user);
+        $user->delete();
+
+        return redirect('/user');
     }
 }
