@@ -13,8 +13,13 @@ class UserController extends Controller
      */
     public function index()
     {
-        $user = UserModel::where('id_level', 2)->count();
-        // dd($user);
+        $user = UserModel::firstOrNew([
+            "username" => "manager33",
+            "name" => "Manager Thirty Three",
+            "password" => Hash::make("12345"),
+            "id_level" => 2,
+        ]);
+        $user->save();
         return view("user", compact("user"));
     }
 
@@ -23,7 +28,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+
     }
 
     /**
