@@ -24,13 +24,11 @@ class UserController extends Controller
             'title' => 'list of users registered in the system',
         ];
 
+        $level = LevelModel::all();
+
         $activeMenu = 'user';
 
-        return view('user.index', [
-            'breadcrumbs' => $breadcrumbs,
-            'page' => $page,
-            'activeMenu' => $activeMenu,
-        ]);
+        return view('user.index', compact('page','breadcrumbs', 'activeMenu', 'level'));
     }
 
     /**
@@ -40,6 +38,10 @@ class UserController extends Controller
     {
         $users = UserModel::select('id_user', 'username', 'name', 'id_level')
             ->with('level');
+
+        if ($request->id_level) {
+            $users = $users->where('id_level', $request->id_level);
+        }
 
         return DataTables::of($users)
             ->addIndexColumn() // add auto sort column (default column name: DT_RowIndex)

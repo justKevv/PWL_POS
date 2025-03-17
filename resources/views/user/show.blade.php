@@ -15,7 +15,7 @@
                 <table class="table table-bordered table-striped table-hover table-sm">
                     <tr>
                         <th>ID</en>
-                        <td>{{ $user->user_id }}</td>
+                        <td>{{ $user->id_user }}</td>
                     </tr>
                     <tr>
                         <th>Level</y>
