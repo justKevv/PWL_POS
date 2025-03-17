@@ -17,6 +17,6 @@ class UserModel extends Model
     ];
 
     public function level() {
-        return $this->belongsTo(LevelModel::class, 'id_level','id_level');
+        return $this->belongsTo(LevelModel::class, 'id_level', 'id_level');
     }
 }
