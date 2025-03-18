@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LevelController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
@@ -39,4 +40,16 @@ Route::prefix('category')->group(function () {
     Route::get('/{category}/edit', [CategoryController::class,'edit']);
     Route::put('/{category}', [CategoryController::class,'update']);
     Route::delete('/{category}', [CategoryController::class,'destroy']);
+});
+
+Route::prefix('item')->group(function () {
+    Route::get('/', [ProductController::class,'index']);
+    Route::post('/list', [ProductController::class,'list']);
+    Route::get('/getNextId/{category}', [ProductController::class, 'getNextId']);
+    Route::get('/create', [ProductController::class,'create']);
+    Route::post('/', [ProductController::class,'store']);
+    Route::get('/{product}', [ProductController::class,'show']);
+    Route::get('/{product}/edit', [ProductController::class,'edit']);
+    Route::put('/{product}', [ProductController::class,'update']);
+    Route::delete('/{product}', [ProductController::class,'destroy']);
 });
