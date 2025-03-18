@@ -19,5 +19,15 @@ Route::prefix('user')->group(function () {
     Route::delete('/{user}', [UserController::class,'destroy']);
 });
 
-Route::get('/level', [LevelController::class, 'index']);
+Route::prefix('level')->group(function () {
+    Route::get('/', [LevelController::class,'index']);
+    Route::post('/list', [LevelController::class,'list']);
+    Route::get('/create', [LevelController::class,'create']);
+    Route::post('/', [LevelController::class,'store']);
+    Route::get('/{level}', [LevelController::class,'show']);
+    Route::get('/{level}/edit', [LevelController::class,'edit']);
+    Route::put('/{level}', [LevelController::class,'update']);
+    Route::delete('/{level}', [LevelController::class,'destroy']);
+});
+
 Route::get('/category', [CategoryController::class, 'index']);
