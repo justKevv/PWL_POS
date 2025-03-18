@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LevelController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -30,4 +30,13 @@ Route::prefix('level')->group(function () {
     Route::delete('/{level}', [LevelController::class,'destroy']);
 });
 
-Route::get('/category', [CategoryController::class, 'index']);
+Route::prefix('category')->group(function () {
+    Route::get('/', [CategoryController::class,'index']);
+    Route::post('/list', [CategoryController::class,'list']);
+    Route::get('/create', [CategoryController::class,'create']);
+    Route::post('/', [CategoryController::class,'store']);
+    Route::get('/{category}', [CategoryController::class,'show']);
+    Route::get('/{category}/edit', [CategoryController::class,'edit']);
+    Route::put('/{category}', [CategoryController::class,'update']);
+    Route::delete('/{category}', [CategoryController::class,'destroy']);
+});
