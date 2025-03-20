@@ -153,7 +153,26 @@ class ProductController extends Controller
      */
     public function update(Request $request, ProductModel $product)
     {
-        //
+        $request->validate([
+            'product_code' => 'required|string|max:100',
+            'product_name' => 'required|string|min:3|unique:m_product,product_name,' . $product->id_product . ',id_product',
+            'purchase_price' => 'required|integer',
+            'selling_price' => 'required|integer',
+            'id_category' => 'required:integer'
+        ]);
+
+        try {
+            $product->update([
+                'product_code' => $request->product_code,
+                'product_name' => $request->product_name,
+                'purchase_price' => $request->purchase_price,
+                'selling_price' => $request->selling_price,
+                'id_category' => $request->id_category,
+            ]);
+            return redirect('/item')->with('success', 'Product has been updated');
+        } catch (\Throwable $th) {
+            return redirect('/item')->with('error', 'Product has failed to update');
+        }
     }
 
     /**
