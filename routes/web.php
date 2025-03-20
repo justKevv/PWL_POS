@@ -3,6 +3,7 @@
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
 use Illuminate\Support\Facades\Route;
@@ -52,4 +53,15 @@ Route::prefix('item')->group(function () {
     Route::get('/{product}/edit', [ProductController::class,'edit']);
     Route::put('/{product}', [ProductController::class,'update']);
     Route::delete('/{product}', [ProductController::class,'destroy']);
+});
+
+Route::prefix('stock')->group(function () {
+    Route::get('/', [StockController::class,'index']);
+    Route::post('/list', [StockController::class,'list']);
+    Route::get('/create', [StockController::class,'create']);
+    Route::post('/', [StockController::class,'store']);
+    Route::get('/{stock}', [StockController::class,'show']);
+    Route::get('/{stock}/edit', [StockController::class,'edit']);
+    Route::put('/{stock}', [StockController::class,'update']);
+    Route::delete('/{stock}', [StockController::class,'destroy']);
 });
