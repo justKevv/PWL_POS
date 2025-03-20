@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\SalesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [WelcomeController::class, 'index']);
@@ -64,4 +65,17 @@ Route::prefix('stock')->group(function () {
     Route::get('/{stock}/edit', [StockController::class,'edit']);
     Route::put('/{stock}', [StockController::class,'update']);
     Route::delete('/{stock}', [StockController::class,'destroy']);
+});
+
+Route::prefix('sales')->group(function () {
+    Route::get('/', [SalesController::class,'index']);
+    Route::post('/list', [SalesController::class,'list']);
+    Route::get('/getNextCode/{date}', [SalesController::class, 'getNextCode']);
+    Route::get('/getProductPrice/{id}', [SalesController::class, 'getProductPrice']);
+    Route::get('/create', [SalesController::class,'create']);
+    Route::post('/', [SalesController::class,'store']);
+    Route::get('/{sales}', [SalesController::class,'show']);
+    Route::get('/{sales}/edit', [SalesController::class,'edit']);
+    Route::put('/{sales}', [SalesController::class,'update']);
+    Route::delete('/{sales}', [SalesController::class,'destroy']);
 });
