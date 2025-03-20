@@ -26,8 +26,8 @@ class SalesController extends Controller
             'title' => 'list of sales registered in the system',
         ];
 
-        $user = UserModel::whereIn('id_user', Sales::select('id_user'))->get();
-
+        $user = UserModel::select('id_user', 'username')->whereIn('id_user', Sales::select('id_user'))->get();
+        
         $activeMenu = 'sales';
 
         return view('sales.index', compact('breadcrumbs', 'page', 'activeMenu', 'user'));
