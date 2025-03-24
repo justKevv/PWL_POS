@@ -19,6 +19,7 @@ Route::prefix('user')->group(function () {
 
     Route::get('/create_ajax', [UserController::class,'create_ajax']);
     Route::post('/ajax', [UserController::class,'store_ajax']);
+    Route::get('/{user}/show_ajax', [UserController::class,'show_ajax']);
     Route::get('/{user}/edit_ajax', [UserController::class,'edit_ajax']);
     Route::put('/{user}/update_ajax', [UserController::class,'update_ajax']);
     Route::get('/{user}/delete_ajax', [UserController::class,'confirm_ajax']);

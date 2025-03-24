@@ -64,6 +64,12 @@ class UserController extends Controller
         return view('user.create_ajax', compact('level'));
     }
 
+    public function show_ajax(UserModel $user)
+    {
+        $user->load('level');
+        return view('user.show_ajax', compact('user'));
+    }
+
     public function store_ajax(Request $request)
     {
         if ($request->ajax() || $request->wantsJson()) {
