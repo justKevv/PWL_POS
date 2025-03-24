@@ -16,6 +16,8 @@ Route::prefix('user')->group(function () {
     Route::post('/list', [UserController::class,'list']);
     Route::get('/create', [UserController::class,'create']);
     Route::post('/', [UserController::class,'store']);
+    Route::get('/create_ajax', [UserController::class,'create_ajax']);
+    Route::post('/ajax', [UserController::class,'store_ajax']);
     Route::get('/{user}', [UserController::class,'show']);
     Route::get('/{user}/edit', [UserController::class,'edit']);
     Route::put('/{user}', [UserController::class,'update']);

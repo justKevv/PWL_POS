@@ -6,6 +6,7 @@
             <div class="card-title">{{ $page->title }}</div>
             <div class="card-tools">
                 <a href="{{ url('/user/create') }}" class="btn btn-sm btn-primary mt-1"> + Add</a>
+                <button onclick="modalAction('{{ url('user/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Add Ajax</button>
             </div>
         </div>
         <div class="card-body">
@@ -45,6 +46,7 @@
             </table>
         </div>
     </div>
+    <div id="myModal" class="modal fade animate shake" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" data-width="75%" aria-hidden="true"></div>
 @endsection
 
 @push('css')
@@ -53,8 +55,14 @@
 
 @push('js')
     <script>
+        function modalAction(url='') {
+            $('#myModal').load(url, function() {
+                $('#myModal').modal('show');
+            });
+        }
+        var dataUser;
         $(document).ready(function() {
-            var dataUser = $('#table_user').DataTable({
+            dataUser = $('#table_user').DataTable({
                 serverSide: true,
                 ajax: {
                     "url": "{{ url('/user/list') }}",
