@@ -34,6 +34,16 @@ Route::prefix('user')->group(function () {
 Route::prefix('level')->group(function () {
     Route::get('/', [LevelController::class,'index']);
     Route::post('/list', [LevelController::class,'list']);
+
+    // Add these new AJAX routes
+    Route::get('/create_ajax', [LevelController::class,'create_ajax']);
+    Route::post('/ajax', [LevelController::class,'store_ajax']);
+    Route::get('/{level}/show_ajax', [LevelController::class,'show_ajax']);
+    Route::get('/{level}/edit_ajax', [LevelController::class,'edit_ajax']);
+    Route::put('/{level}/update_ajax', [LevelController::class,'update_ajax']);
+    Route::get('/{level}/delete_ajax', [LevelController::class,'confirm_ajax']);
+    Route::delete('/{level}/delete_ajax', [LevelController::class,'delete_ajax']);
+
     Route::get('/create', [LevelController::class,'create']);
     Route::post('/', [LevelController::class,'store']);
     Route::get('/{level}', [LevelController::class,'show']);
