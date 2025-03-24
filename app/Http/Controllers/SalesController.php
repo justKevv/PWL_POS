@@ -27,7 +27,7 @@ class SalesController extends Controller
         ];
 
         $user = UserModel::select('id_user', 'username')->whereIn('id_user', Sales::select('id_user'))->get();
-        
+
         $activeMenu = 'sales';
 
         return view('sales.index', compact('breadcrumbs', 'page', 'activeMenu', 'user'));
@@ -45,11 +45,9 @@ class SalesController extends Controller
         return DataTables::of($sales)
             ->addIndexColumn()
             ->addColumn('action', function ($sale) {
-                $btn = '<a href="' . url('/sales/' . $sale->id_sales) . '" class="btn btn-info btn-sm">Detail</a> ';
-                $btn .= '<a href="' . url('/sales/' . $sale->id_sales . '/edit') . '" class="btn btn-warning btn-sm">Edit</a> ';
-                $btn .= '<form class="d-inline-block" method="POST" action="' . url('/sales/' . $sale->id_sales) . '">
-                    ' . csrf_field() . method_field('DELETE') . '
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Did you delete this data?\');">Delete</button></form>';
+                $btn = '<button onclick="modalAction(\'' . url('/sales/' . $sale->id_sales . '/show_ajax') . '\')" class="btn btn-info btn-sm">Detail</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/sales/' . $sale->id_sales . '/edit_ajax') . '\')" class="btn btn-warning btn-sm">Edit</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/sales/' . $sale->id_sales . '/delete_ajax') . '\')" class="btn btn-danger btn-sm">Delete</button>';
 
                 return $btn;
             })
@@ -57,33 +55,131 @@ class SalesController extends Controller
             ->make(true);
     }
 
+    public function create_ajax()
+    {
+        $product = ProductModel::all();
+        $user = UserModel::all();
+        return view('sales.create_ajax', compact('product', 'user'));
+    }
+
+    public function store_ajax(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $sales = Sales::create([
+                'sales_code' => $request->sales_code,
+                'buyer' => $request->buyer,
+                'id_user' => $request->id_user,
+                'sales_date' => $request->sales_date_time,
+            ]);
+
+            foreach ($request->id_product as $key => $id_product) {
+                SalesDetail::create([
+                    'id_sales' => $sales->id_sales,
+                    'id_product' => $id_product,
+                    'qty' => $request->qty[$key],
+                    'price' => $request->price[$key],
+                ]);
+            }
+
+            DB::commit();
+            return response()->json(['status' => true, 'message' => 'Sales created successfully']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['status' => false, 'message' => 'Failed to create sales']);
+        }
+    }
+
+    public function show_ajax(Sales $sales)
+    {
+        $sales->load('user', 'detail.product');
+        return view('sales.show_ajax', compact('sales'));
+    }
+
+    public function edit_ajax(Sales $sales)
+    {
+        $sales->load('detail.product');
+        $product = ProductModel::all();
+        $user = UserModel::all();
+        return view('sales.edit_ajax', compact('sales', 'product', 'user'));
+    }
+
+    public function update_ajax(Request $request, Sales $sales)
+    {
+        try {
+            DB::beginTransaction();
+
+            $sales->update([
+                'buyer' => $request->buyer,
+                'id_user' => $request->id_user,
+                'sales_date' => $request->sales_date_time,
+            ]);
+
+            // Delete existing details
+            $sales->detail()->delete();
+
+            // Create new details
+            foreach ($request->id_product as $key => $id_product) {
+                SalesDetail::create([
+                    'id_sales' => $sales->id_sales,
+                    'id_product' => $id_product,
+                    'qty' => $request->qty[$key],
+                    'price' => $request->price[$key],
+                ]);
+            }
+
+            DB::commit();
+            return response()->json(['status' => true, 'message' => 'Sales updated successfully']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['status' => false, 'message' => 'Failed to update sales']);
+        }
+    }
+
+    public function confirm_ajax(Sales $sales)
+    {
+        return view('sales.confirm_ajax', compact('sales'));
+    }
+
+    public function delete_ajax(Sales $sales)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Delete details first
+            $sales->detail()->delete();
+
+            // Then delete the sales
+            $sales->delete();
+
+            DB::commit();
+            return response()->json(['status' => true, 'message' => 'Sales deleted successfully']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['status' => false, 'message' => 'Failed to delete sales']);
+        }
+    }
+
     public function getNextCode($date)
     {
-        $dateParts = explode('-', $date);
-        $year = $dateParts[0];
-        $month = $dateParts[1];
-        $day = $dateParts[2];
+        $date = date('Y-m-d', strtotime($date));
+        $lastSales = Sales::whereDate('sales_date', $date)->latest()->first();
 
-        $lastSale = Sales::where('sales_code', 'LIKE', "SALE/$year/$month/$day/%")
-            ->orderBy('sales_code', 'desc')
-            ->first();
-
-        $nextCode = 1;
-        if ($lastSale) {
-            $lastNumber = intval(substr($lastSale->sales_code, -3));
-            $nextCode = $lastNumber + 1;
+        if ($lastSales) {
+            $lastCode = explode('/', $lastSales->sales_code);
+            $nextCode = intval(end($lastCode)) + 1;
+        } else {
+            $nextCode = 1;
         }
 
         return response()->json(['next_code' => $nextCode]);
     }
 
-    public function getProductPrice($id_product) {
+    public function getProductPrice($id_product)
+    {
         $product = ProductModel::find($id_product);
-        if ($product) {
-            return response()->json(['price' => $product->selling_price]);
-        } else {
-            return response()->json(['price' => 0]);
-        }
+        return response()->json(['price' => $product ? $product->selling_price : 0]);
     }
 
     /**

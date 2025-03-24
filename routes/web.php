@@ -119,8 +119,18 @@ Route::prefix('stock')->group(function () {
 Route::prefix('sales')->group(function () {
     Route::get('/', [SalesController::class,'index']);
     Route::post('/list', [SalesController::class,'list']);
-    Route::get('/getNextCode/{date}', [SalesController::class, 'getNextCode']);
-    Route::get('/getProductPrice/{id}', [SalesController::class, 'getProductPrice']);
+    Route::get('/getNextCode/{date}', [SalesController::class,'getNextCode']);
+    Route::get('/getProductPrice/{id_product}', [SalesController::class,'getProductPrice']);
+
+    // Add these new AJAX routes
+    Route::get('/create_ajax', [SalesController::class,'create_ajax']);
+    Route::post('/ajax', [SalesController::class,'store_ajax']);
+    Route::get('/{sales}/show_ajax', [SalesController::class,'show_ajax']);
+    Route::get('/{sales}/edit_ajax', [SalesController::class,'edit_ajax']);
+    Route::put('/{sales}/update_ajax', [SalesController::class,'update_ajax']);
+    Route::get('/{sales}/delete_ajax', [SalesController::class,'confirm_ajax']);
+    Route::delete('/{sales}/delete_ajax', [SalesController::class,'delete_ajax']);
+
     Route::get('/create', [SalesController::class,'create']);
     Route::post('/', [SalesController::class,'store']);
     Route::get('/{sales}', [SalesController::class,'show']);

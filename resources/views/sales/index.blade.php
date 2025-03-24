@@ -6,6 +6,7 @@
             <div class="card-title">{{ $page->title }}</div>
             <div class="card-tools">
                 <a href="{{ url('/sales/create') }}" class="btn btn-sm btn-primary mt-1"> + Add</a>
+                <button onclick="modalAction('{{ url('sales/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Add Ajax</button>
             </div>
         </div>
         <div class="card-body">
@@ -27,7 +28,7 @@
                                     <option value="{{ $item->id_user }}">{{ $item->username }}</option>
                                 @endforeach
                             </select>
-                            <small class="form-text text-muted">Level Filter</small>
+                            <small class="form-text text-muted">User Filter</small>
                         </div>
                     </div>
                 </div>
@@ -47,6 +48,8 @@
             </table>
         </div>
     </div>
+    <div id="myModal" class="modal fade animate shake" tabindex="-1" role="dialog" data-backdrop="static"
+        data-keyboard="false" data-width="75%" aria-hidden="true"></div>
 @endsection
 
 @push('css')
@@ -54,8 +57,15 @@
 
 @push('js')
     <script>
-        $(document).ready(function() {
-            var dataSales = $('#table_sales').DataTable({
+        function modalAction(url = '') {
+            $('#myModal').load(url, function () {
+                $('#myModal').modal('show');
+            });
+        }
+
+        var dataSales;
+        $(document).ready(function () {
+            dataSales = $('#table_sales').DataTable({
                 serverSide: true,
                 ajax: {
                     "url": "{{ url('/sales/list') }}",
@@ -65,44 +75,37 @@
                         d.id_user = $('#id_user').val();
                     }
                 },
-                columns: [
-                    {
-                        data: "DT_RowIndex",
-                        className: "text-center",
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: "sales_code",
-                        className: "",
-                        orderable: true,
-                        searchable: true
-                    },
-                    {
-                        data: "buyer",
-                        className: "",
-                        orderable: true,
-                        searchable: true
-                    },
-                    {
-                        data: "user.username",
-                        className: "",
-                        orderable: true,
-                        searchable: true
-                    },
-                    {
-                        data: "sales_date",
-                        className: "",
-                        orderable: true,
-                        searchable: false
-                    },
-                    {
-                        data: "action",
-                        className: "",
-                        orderable: false,
-                        searchable: false
-                    }
-                ]
+                columns: [{
+                    data: "DT_RowIndex",
+                    className: "text-center",
+                    orderable: false,
+                    searchable: false
+                }, {
+                    data: "sales_code",
+                    className: "",
+                    orderable: true,
+                    searchable: true
+                }, {
+                    data: "buyer",
+                    className: "",
+                    orderable: true,
+                    searchable: true
+                }, {
+                    data: "user.username",
+                    className: "",
+                    orderable: true,
+                    searchable: true
+                }, {
+                    data: "sales_date",
+                    className: "",
+                    orderable: true,
+                    searchable: false
+                }, {
+                    data: "action",
+                    className: "",
+                    orderable: false,
+                    searchable: false
+                }]
             });
 
             $('#id_user').change(function() {
