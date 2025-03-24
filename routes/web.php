@@ -55,6 +55,16 @@ Route::prefix('level')->group(function () {
 Route::prefix('category')->group(function () {
     Route::get('/', [CategoryController::class,'index']);
     Route::post('/list', [CategoryController::class,'list']);
+
+    // Add these new AJAX routes
+    Route::get('/create_ajax', [CategoryController::class,'create_ajax']);
+    Route::post('/ajax', [CategoryController::class,'store_ajax']);
+    Route::get('/{category}/show_ajax', [CategoryController::class,'show_ajax']);
+    Route::get('/{category}/edit_ajax', [CategoryController::class,'edit_ajax']);
+    Route::put('/{category}/update_ajax', [CategoryController::class,'update_ajax']);
+    Route::get('/{category}/delete_ajax', [CategoryController::class,'confirm_ajax']);
+    Route::delete('/{category}/delete_ajax', [CategoryController::class,'delete_ajax']);
+
     Route::get('/create', [CategoryController::class,'create']);
     Route::post('/', [CategoryController::class,'store']);
     Route::get('/{category}', [CategoryController::class,'show']);

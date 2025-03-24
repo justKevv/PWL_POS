@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CategoryModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
@@ -34,11 +35,9 @@ class CategoryController extends Controller
         return DataTables::of($category)
             ->addIndexColumn()
             ->addColumn('action', function ($category) { // add action column
-                $btn = '<a href="' . url('/category/' . $category->id_category) . '" class="btn btn-info btn-sm">Detail</a> ';
-                $btn .= '<a href="' . url('/category/' . $category->id_category . '/edit') . '" class="btn btn-warning btn-sm">Edit</a> ';
-                $btn .= '<form class="d-inline-block" method="POST" action="' . url('/category/' . $category->id_category) . '">
-                    ' . csrf_field() . method_field('DELETE') . '
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Did you delete this data?\');">Delete</button></form>';
+                $btn = '<button onclick="modalAction(\'' . url('/category/' . $category->id_category . '/show_ajax') . '\')" class="btn btn-info btn-sm">Detail</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/category/' . $category->id_category . '/edit_ajax') . '\')" class="btn btn-warning btn-sm">Edit</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/category/' . $category->id_category . '/delete_ajax') . '\')" class="btn btn-danger btn-sm">Delete</button> ';
 
                 return $btn;
             })
@@ -146,5 +145,105 @@ class CategoryController extends Controller
     {
         $category->delete();
         return redirect('/category')->with('success', 'Category deleted successfully');
+    }
+
+    public function create_ajax()
+    {
+        return view('category.create_ajax');
+    }
+
+    public function show_ajax(CategoryModel $category)
+    {
+        return view('category.show_ajax', compact('category'));
+    }
+
+    public function store_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                'code_category' =>'required|string|unique:m_category,code_category',
+                'name_category' =>'required|string|max:100',
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            CategoryModel::create($request->all());
+
+            return response()->json([
+               'status' => true,
+               'message' => 'Category created successfully',
+            ]);
+        }
+
+        redirect('/');
+    }
+
+    public function edit_ajax(CategoryModel $category)
+    {
+        return view('category.edit_ajax', compact('category'));
+    }
+
+    public function update_ajax(Request $request, CategoryModel $category)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                'code_category' => 'required|string|unique:m_category,code_category,' . $category->id_category . ',id_category',
+                'name_category' => 'required|string|max:100',
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            if ($category) {
+                $category->update($request->all());
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Category updated successfully',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Category not found',
+                ]);
+            }
+        }
+        return redirect('/');
+    }
+
+    public function confirm_ajax(CategoryModel $category)
+    {
+        return view('category.confirm_ajax', compact('category'));
+    }
+
+    public function delete_ajax(Request $request, CategoryModel $category)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if ($category) {
+                $category->delete();
+                return response()->json([
+                   'status' => true,
+                   'message' => 'Category deleted successfully',
+                ]);
+            } else {
+                return response()->json([
+                   'status' => false,
+                   'message' => 'Category not found',
+                ]);
+            }
+        }
+        return redirect('/');
     }
 }
