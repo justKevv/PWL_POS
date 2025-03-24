@@ -29,7 +29,7 @@ class UserController extends Controller
 
         $activeMenu = 'user';
 
-        return view('user.index', compact('page','breadcrumbs', 'activeMenu', 'level'));
+        return view('user.index', compact('page', 'breadcrumbs', 'activeMenu', 'level'));
     }
 
     /**
@@ -47,11 +47,9 @@ class UserController extends Controller
         return DataTables::of($users)
             ->addIndexColumn() // add auto sort column (default column name: DT_RowIndex)
             ->addColumn('action', function ($user) { // add action column
-                $btn = '<a href="' . url('/user/' . $user->id_user) . '" class="btn btn-info btn-sm">Detail</a> ';
-                $btn .= '<a href="' . url('/user/' . $user->id_user . '/edit') . '" class="btn btn-warning btn-sm">Edit</a> ';
-                $btn .= '<form class="d-inline-block" method="POST" action="' . url('/user/' . $user->id_user) . '">
-                    ' . csrf_field() . method_field('DELETE') . '
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Did you delete this data?\');">Delete</button></form>';
+                $btn = '<button onclick="modalAction(\'' . url('/user/' . $user->id_user . '/show_ajax') . '\')" class="btn btn-info btn-sm">Detail</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/user/' . $user->id_user . '/edit_ajax') . '\')" class="btn btn-warning btn-sm">Edit</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/user/' . $user->id_user . '/delete_ajax') . '\')" class="btn btn-danger btn-sm">Delete</button> ';
 
                 return $btn;
             })
@@ -59,13 +57,15 @@ class UserController extends Controller
             ->make(true);
     }
 
-    public function create_ajax() {
+    public function create_ajax()
+    {
         $level = LevelModel::select('id_level', 'name_level')->get();
 
         return view('user.create_ajax', compact('level'));
     }
 
-    public function store_ajax(Request $request) {
+    public function store_ajax(Request $request)
+    {
         if ($request->ajax() || $request->wantsJson()) {
             $rules = [
                 'id_level' => 'required|integer',
@@ -97,6 +97,52 @@ class UserController extends Controller
             ]);
         }
 
+        redirect('/');
+    }
+
+    public function edit_ajax(UserModel $user)
+    {
+        $level = LevelModel::select('id_level', 'name_level')->get();
+        return view('user.edit_ajax', compact('user', 'level'));
+    }
+
+    public function update_ajax(Request $request, UserModel $user)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                'id_level' => 'required|integer',
+                'username' => 'required|string|min:3|unique:m_user,username,' . $user->id_user . ',id_user',
+                'name' => 'required|string|max:100',
+                'password' => 'nullable|string|min:6',
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            if ($user) {
+                if (!$request->filled('password')) {
+                    $request->request->remove('password');
+                }
+
+                $user->update($request->all());
+                return response()->json([
+                    'status' => true,
+                    'message' => 'User updated successfully',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found',
+                ]);
+            }
+        }
         redirect('/');
     }
 

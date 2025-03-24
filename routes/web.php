@@ -18,6 +18,8 @@ Route::prefix('user')->group(function () {
     Route::post('/', [UserController::class,'store']);
     Route::get('/create_ajax', [UserController::class,'create_ajax']);
     Route::post('/ajax', [UserController::class,'store_ajax']);
+    Route::get('/{user}/edit_ajax', [UserController::class,'edit_ajax']);
+    Route::put('/{user}/update_ajax', [UserController::class,'update_ajax']);
     Route::get('/{user}', [UserController::class,'show']);
     Route::get('/{user}/edit', [UserController::class,'edit']);
     Route::put('/{user}', [UserController::class,'update']);
