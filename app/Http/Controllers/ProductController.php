@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CategoryModel;
 use App\Models\ProductModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
@@ -40,30 +41,26 @@ class ProductController extends Controller
         }
 
         return DataTables::of($products)
-            ->addIndexColumn() // add auto sort column (default column name: DT_RowIndex)
-            ->addColumn('action', function ($product) { // add action column
-                $btn = '<a href="' . url('/item/' . $product->id_product) . '" class="btn btn-info btn-sm">Detail</a> ';
-                $btn .= '<a href="' . url('/item/' . $product->id_product . '/edit') . '" class="btn btn-warning btn-sm">Edit</a> ';
-                $btn .= '<form class="d-inline-block" method="POST" action="' . url('/item/' . $product->id_product) . '">
-                    ' . csrf_field() . method_field('DELETE') . '
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Did you delete this data?\');">Delete</button></form>';
+            ->addIndexColumn()
+            ->addColumn('action', function ($product) {
+                $btn = '<button onclick="modalAction(\'' . url('/item/' . $product->id_product . '/show_ajax') . '\')" class="btn btn-info btn-sm">Detail</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/item/' . $product->id_product . '/edit_ajax') . '\')" class="btn btn-warning btn-sm">Edit</button> ';
+                $btn .= '<button onclick="modalAction(\'' . url('/item/' . $product->id_product . '/delete_ajax') . '\')" class="btn btn-danger btn-sm">Delete</button> ';
 
                 return $btn;
             })
-            ->rawColumns(['action']) // tells you that the action column is html
+            ->rawColumns(['action'])
             ->make(true);
     }
 
     public function getNextId(CategoryModel $category) {
         $lastProduct = ProductModel::where('id_category', $category->id_category)->orderBy('product_code', 'desc')->first();
 
-        $nextId = 1;
-        if ($lastProduct) {
-            $lastNumber = intval(substr($lastProduct->product_code, -3));
-            $nextId = $lastNumber + 1;
-        }
+        $nextId = $lastProduct ? ($lastProduct->id_product + 1) : 1;
 
-        return response()->json(['next_id' => $nextId]);
+        return response()->json([
+            'next_id' => $nextId
+        ]);
     }
 
     /**
@@ -182,5 +179,114 @@ class ProductController extends Controller
     {
         $product->delete();
         return redirect('/item')->with('success','Product has been deleted');
+    }
+
+    public function create_ajax()
+    {
+        $category = CategoryModel::all();
+        return view('product.create_ajax', compact('category'));
+    }
+
+    public function show_ajax(ProductModel $product)
+    {
+        return view('product.show_ajax', compact('product'));
+    }
+
+    public function store_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                'id_category' => 'required',
+                'product_code' => 'required|unique:m_product,product_code',
+                'product_name' => 'required|string|max:255',
+                'purchase_price' => 'required|numeric|min:0',
+                'selling_price' => 'required|numeric|min:0'
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            ProductModel::create($request->all());
+
+            return response()->json([
+               'status' => true,
+               'message' => 'Product created successfully',
+            ]);
+        }
+
+        return redirect('/');
+    }
+
+    public function edit_ajax(ProductModel $product)
+    {
+        $category = CategoryModel::all();
+        return view('product.edit_ajax', compact('product', 'category'));
+    }
+
+    public function update_ajax(Request $request, ProductModel $product)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                'id_category' => 'required',
+                'product_code' => 'required|unique:m_product,product_code,' . $product->id_product . ',id_product',
+                'product_name' => 'required|string|max:255',
+                'purchase_price' => 'required|numeric|min:0',
+                'selling_price' => 'required|numeric|min:0'
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            if ($product) {
+                $product->update($request->all());
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Product updated successfully',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found',
+                ]);
+            }
+        }
+        return redirect('/');
+    }
+
+    public function confirm_ajax(ProductModel $product)
+    {
+        return view('product.confirm_ajax', compact('product'));
+    }
+
+    public function delete_ajax(Request $request, ProductModel $product)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if ($product) {
+                $product->delete();
+                return response()->json([
+                   'status' => true,
+                   'message' => 'Product deleted successfully',
+                ]);
+            } else {
+                return response()->json([
+                   'status' => false,
+                   'message' => 'Product not found',
+                ]);
+            }
+        }
+        return redirect('/');
     }
 }

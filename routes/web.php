@@ -77,6 +77,16 @@ Route::prefix('item')->group(function () {
     Route::get('/', [ProductController::class,'index']);
     Route::post('/list', [ProductController::class,'list']);
     Route::get('/getNextId/{category}', [ProductController::class, 'getNextId']);
+    
+    // Add these new AJAX routes
+    Route::get('/create_ajax', [ProductController::class,'create_ajax']);
+    Route::post('/ajax', [ProductController::class,'store_ajax']);
+    Route::get('/{product}/show_ajax', [ProductController::class,'show_ajax']);
+    Route::get('/{product}/edit_ajax', [ProductController::class,'edit_ajax']);
+    Route::put('/{product}/update_ajax', [ProductController::class,'update_ajax']);
+    Route::get('/{product}/delete_ajax', [ProductController::class,'confirm_ajax']);
+    Route::delete('/{product}/delete_ajax', [ProductController::class,'delete_ajax']);
+
     Route::get('/create', [ProductController::class,'create']);
     Route::post('/', [ProductController::class,'store']);
     Route::get('/{product}', [ProductController::class,'show']);
