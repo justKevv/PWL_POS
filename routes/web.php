@@ -16,10 +16,14 @@ Route::prefix('user')->group(function () {
     Route::post('/list', [UserController::class,'list']);
     Route::get('/create', [UserController::class,'create']);
     Route::post('/', [UserController::class,'store']);
+
     Route::get('/create_ajax', [UserController::class,'create_ajax']);
     Route::post('/ajax', [UserController::class,'store_ajax']);
     Route::get('/{user}/edit_ajax', [UserController::class,'edit_ajax']);
     Route::put('/{user}/update_ajax', [UserController::class,'update_ajax']);
+    Route::get('/{user}/delete_ajax', [UserController::class,'confirm_ajax']);
+    Route::delete('/{user}/delete_ajax', [UserController::class,'delete_ajax']);
+
     Route::get('/{user}', [UserController::class,'show']);
     Route::get('/{user}/edit', [UserController::class,'edit']);
     Route::put('/{user}', [UserController::class,'update']);

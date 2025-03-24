@@ -146,6 +146,29 @@ class UserController extends Controller
         redirect('/');
     }
 
+    public function confirm_ajax(UserModel $user)
+    {
+        return view('user.confirm_ajax', compact('user'));
+    }
+
+    public function delete_ajax(Request $request, UserModel $user)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if ($user) {
+                $user->delete();
+                return response()->json([
+                   'status' => true,
+                   'message' => 'User deleted successfully',
+                ]);
+            } else {
+                return response()->json([
+                   'status' => false,
+                   'message' => 'User not found',
+                ]);
+            }
+        }
+    }
+
     /**
      * Show the form for creating a new resource.
      */
