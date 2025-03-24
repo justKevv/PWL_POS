@@ -77,7 +77,7 @@ Route::prefix('item')->group(function () {
     Route::get('/', [ProductController::class,'index']);
     Route::post('/list', [ProductController::class,'list']);
     Route::get('/getNextId/{category}', [ProductController::class, 'getNextId']);
-    
+
     // Add these new AJAX routes
     Route::get('/create_ajax', [ProductController::class,'create_ajax']);
     Route::post('/ajax', [ProductController::class,'store_ajax']);
@@ -98,6 +98,16 @@ Route::prefix('item')->group(function () {
 Route::prefix('stock')->group(function () {
     Route::get('/', [StockController::class,'index']);
     Route::post('/list', [StockController::class,'list']);
+
+    // Add these new AJAX routes
+    Route::get('/create_ajax', [StockController::class,'create_ajax']);
+    Route::post('/ajax', [StockController::class,'store_ajax']);
+    Route::get('/{stock}/show_ajax', [StockController::class,'show_ajax']);
+    Route::get('/{stock}/edit_ajax', [StockController::class,'edit_ajax']);
+    Route::put('/{stock}/update_ajax', [StockController::class,'update_ajax']);
+    Route::get('/{stock}/delete_ajax', [StockController::class,'confirm_ajax']);
+    Route::delete('/{stock}/delete_ajax', [StockController::class,'delete_ajax']);
+
     Route::get('/create', [StockController::class,'create']);
     Route::post('/', [StockController::class,'store']);
     Route::get('/{stock}', [StockController::class,'show']);
