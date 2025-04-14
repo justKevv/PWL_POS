@@ -80,4 +80,16 @@
       </ul>
     </nav>
     <!-- /.sidebar-menu -->
+
+    <!-- Logout button -->
+    <div class="mt-auto" style="position: absolute; bottom: 0; width: 100%; padding: 1rem;">
+      <ul class="nav nav-pills nav-sidebar flex-column">
+        <li class="nav-item">
+          <a href="{{ url('/logout') }}" class="nav-link">
+            <i class="nav-icon fas fa-sign-out-alt"></i>
+            <p>Logout</p>
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
