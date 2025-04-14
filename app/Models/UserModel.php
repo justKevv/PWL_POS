@@ -28,4 +28,16 @@ class UserModel extends Authenticatable
     public function level() {
         return $this->belongsTo(LevelModel::class, 'id_level', 'id_level');
     }
+
+    public function getRoleName() {
+        return $this->level->name_level;
+    }
+
+    public function hasRole($role) {
+        return $this->level->code_level == $role;
+    }
+
+    public function getRole() {
+        return $this->level->code_level;
+    }
 }
