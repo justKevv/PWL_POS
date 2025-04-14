@@ -2,11 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UserModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+
+    public function register() {
+        if (Auth::check()) {
+            return redirect('/');
+        }
+        return view('auth.register');
+    }
+
+    public function postRegister(Request $request) {
+        if ($request->ajax() || $request->wantsJson()) {
+            try {
+                $credentials = $request->validate([
+                    'username' => ['required', 'string', 'min:4', 'max:20'],
+                    'name' => ['required', 'string', 'min:3', 'max:50'],
+                    'password' => ['required', 'string', 'min:6', 'confirmed'],
+                    'terms' => ['required', 'accepted']
+                ]);
+
+                $user = UserModel::create([
+                    'username' => $credentials['username'],
+                    'name' => $credentials['name'],
+                    'password' => $credentials['password'],
+                    'id_level' => 3
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => 'User created successfully',
+                    'redirect' => url('/login'),
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                   'status' => false,
+                   'message' => 'Registration error: '. $e->getMessage(),
+                ], 500);
+            }
+        }
+        return redirect('register');
+    }
     public function login() {
         if (Auth::check()) {
             return redirect('/');
