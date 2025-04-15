@@ -5,6 +5,7 @@
         <div class="card-header">
             <div class="card-title">{{ $page->title }}</div>
             <div class="card-tools">
+                <button onclick="modalAction('{{ url('/item/import') }}')" class="btn btn-info">Import Goods</button>
                 <a href="{{ url('/item/create') }}" class="btn btn-sm btn-primary mt-1"> + Add</a>
                 <button onclick="modalAction('{{ url('item/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Add
                     Ajax</button>
@@ -28,7 +29,7 @@
                                     <option value="{{ $item->id_category }}">{{ $item->name_category }}</option>
                                 @endforeach
                             </select>
-                            <small class="form-text text-muted">Level Filter</small>
+                            <small class="form-text text-muted">Item Category</small>
                         </div>
                     </div>
                 </div>
@@ -81,36 +82,49 @@
                     {
                         data: "DT_RowIndex",
                         className: "text-center",
+                        width: "5%",
                         orderable: false,
                         searchable: false
                     }, {
                         data: "product_code",
                         className: "",
+                        width: "10%",
                         orderable: true,
                         searchable: true
                     }, {
                         data: "product_name",
                         className: "",
+                        width: "10%",
                         orderable: true,
                         searchable: true
                     }, {
                         data: "category.name_category",  // Changed to access through relationship
                         className: "",
+                        width: "14%",
                         orderable: false,
                         searchable: false
                     }, {
                         data: "purchase_price",
                         className: "",
+                        width: "10%",
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        render: function (data, type, row) {
+                            return new Intl.NumberFormat('id-ID').format(data);
+                        }
                     }, {
                         data: "selling_price",
                         className: "",
+                        width: "10%",
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        render: function (data, type, row) {
+                            return new Intl.NumberFormat('id-ID').format(data);
+                        }
                     }, {
                         data: "action",
                         className: "",
+                        width: "14%",
                         orderable: false,
                         searchable: false
                     }

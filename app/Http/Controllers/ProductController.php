@@ -6,6 +6,7 @@ use App\Models\CategoryModel;
 use App\Models\ProductModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
@@ -284,6 +285,85 @@ class ProductController extends Controller
                 return response()->json([
                    'status' => false,
                    'message' => 'Product not found',
+                ]);
+            }
+        }
+        return redirect('/');
+    }
+
+    public function import() {
+        return view('product.import');
+    }
+
+    public function import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if (!$request->hasFile('file_item')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No file uploaded',
+                    'msgField' => ['file_item' => ['Please select a file']]
+                ]);
+            }
+
+            $rules = [
+                'file_item' => ['required', 'mimes:xlsx,xls', 'max:1024']
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation Failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            try {
+                $file = $request->file('file_item');
+                $reader = IOFactory::createReader('Xlsx');
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getRealPath());
+                $sheet = $spreadsheet->getActiveSheet();
+                $data = $sheet->toArray(null, false, true, true);
+
+                $insert = [];
+                if (count($data) > 1) {
+                    foreach ($data as $row => $value) {
+                        if ($row > 1) {
+                            $insert[] = [
+                                'id_category' => $value['A'],
+                                'product_code' => $value['B'],
+                                'product_name' => $value['C'],
+                                'purchase_price' => $value['D'],
+                                'selling_price' => $value['E'],
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ];
+                        }
+                    }
+
+                    if (count($insert) > 0) {
+                        ProductModel::insertOrIgnore($insert);
+                        return response()->json([
+                            'status' => true,
+                            'message' => 'Data imported successfully'
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No data imported'
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Import failed: ' . $e->getMessage(),
+                    'debug' => [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]
                 ]);
             }
         }

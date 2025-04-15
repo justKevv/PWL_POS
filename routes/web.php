@@ -95,6 +95,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [ProductController::class, 'index']);
             Route::post('/list', [ProductController::class, 'list']);
             Route::get('/getNextId/{category}', [ProductController::class, 'getNextId']);
+            Route::get('/import', [ProductController::class, 'import']);
+            Route::post('/import_ajax', [ProductController::class, 'import_ajax']);
 
             // Add these new AJAX routes
             Route::get('/create_ajax', [ProductController::class, 'create_ajax']);
