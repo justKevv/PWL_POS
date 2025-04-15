@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
@@ -304,5 +305,83 @@ class UserController extends Controller
             return redirect('/user')->with('error', $e->getMessage());
         }
 
+    }
+
+    public function import() {
+        return view('user.import');
+    }
+
+    public function import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if (!$request->hasFile('file_user')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No file uploaded',
+                    'msgField' => ['file_user' => ['Please select a file']]
+                ]);
+            }
+
+            $rules = [
+                'file_user' => ['required', 'mimes:xlsx,xls', 'max:1024']
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation Failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            try {
+                $file = $request->file('file_user');
+                $reader = IOFactory::createReader('Xlsx');
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getRealPath());
+                $sheet = $spreadsheet->getActiveSheet();
+                $data = $sheet->toArray(null, false, true, true);
+
+                $insert = [];
+                if (count($data) > 1) {
+                    foreach ($data as $row => $value) {
+                        if ($row > 1) {
+                            $insert[] = [
+                                'id_level' => $value['A'],
+                                'username' => $value['B'],
+                                'name' => $value['C'],
+                                'password' => bcrypt($value['D']),
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ];
+                        }
+                    }
+
+                    if (count($insert) > 0) {
+                        UserModel::insertOrIgnore($insert);
+                        return response()->json([
+                            'status' => true,
+                            'message' => 'Data imported successfully'
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No data imported'
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Import failed: ' . $e->getMessage(),
+                    'debug' => [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]
+                ]);
+            }
+        }
+        return redirect('/');
     }
 }
