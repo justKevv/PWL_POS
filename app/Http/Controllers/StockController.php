@@ -7,6 +7,7 @@ use App\Models\StockModel;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory; // Add this use statement
 use Yajra\DataTables\Facades\DataTables;
 
 class StockController extends Controller
@@ -307,6 +308,129 @@ class StockController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => 'Failed to delete stock'
+                ]);
+            }
+        }
+
+    }
+
+    public function import_ajax() {
+        return view('stock.import');
+    }
+
+    public function store_import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if (!$request->hasFile('file_stock')) { // Changed from file_item
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No file uploaded',
+                    'msgField' => ['file_stock' => ['Please select a file']] // Changed from file_item
+                ]);
+            }
+
+            $rules = [
+                'file_stock' => ['required', 'mimes:xlsx,xls', 'max:1024'] // Changed from file_item
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation Failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            try {
+                $file = $request->file('file_stock'); // Changed from file_item
+                $reader = IOFactory::createReader('Xlsx');
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getRealPath());
+                $sheet = $spreadsheet->getActiveSheet();
+                $data = $sheet->toArray(null, false, true, true);
+
+                $insert = [];
+                $update = [];
+                if (count($data) > 1) {
+                    foreach ($data as $row => $value) {
+                        if ($row > 1) {
+                            // Assuming Excel columns: A=id_product, B=id_user, C=date_stock (YYYY-MM-DD HH:MM:SS), D=stock_quantity
+                            $id_product = $value['A'];
+                            $id_user = $value['B'];
+                            $date_stock = $value['C'];
+                            $stock_quantity = $value['D'];
+
+                            // Validate data types if necessary
+                            if (!is_numeric($id_product) || !is_numeric($id_user) || !is_numeric($stock_quantity)) {
+                                // Skip row or return error
+                                continue;
+                            }
+
+                            // Check if stock for this product already exists
+                            $existingStock = StockModel::where('id_product', $id_product)->first();
+
+                            if ($existingStock) {
+                                // Prepare for update (add to existing quantity)
+                                $update[] = [
+                                    'id_stock' => $existingStock->id_stock,
+                                    'id_user' => $id_user,
+                                    'date_stock' => $date_stock,
+                                    'stock_quantity' => $existingStock->stock_quantity + $stock_quantity,
+                                    'updated_at' => now()
+                                ];
+                            } else {
+                                // Prepare for insert
+                                $insert[] = [
+                                    'id_product' => $id_product,
+                                    'id_user' => $id_user,
+                                    'date_stock' => $date_stock,
+                                    'stock_quantity' => $stock_quantity,
+                                    'created_at' => now(),
+                                    'updated_at' => now()
+                                ];
+                            }
+                        }
+                    }
+
+                    $importedCount = 0;
+                    if (count($insert) > 0) {
+                        StockModel::insert($insert); // Use insert for new records
+                        $importedCount += count($insert);
+                    }
+                    if (count($update) > 0) {
+                        foreach ($update as $stockData) {
+                            StockModel::where('id_stock', $stockData['id_stock'])->update([
+                                'id_user' => $stockData['id_user'],
+                                'date_stock' => $stockData['date_stock'],
+                                'stock_quantity' => $stockData['stock_quantity'],
+                                'updated_at' => $stockData['updated_at']
+                            ]);
+                        }
+                        $importedCount += count($update);
+                    }
+
+
+                    if ($importedCount > 0) {
+                        return response()->json([
+                            'status' => true,
+                            'message' => $importedCount . ' rows imported/updated successfully'
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No data imported. Check file format and content.'
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Import failed: ' . $e->getMessage(),
+                    'debug' => [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
+                    ]
                 ]);
             }
         }

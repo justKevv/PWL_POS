@@ -5,6 +5,7 @@
         <div class="card-header">
             <div class="card-title">{{ $page->title }}</div>
             <div class="card-tools">
+                <button onclick="modalAction('{{ url('stock/import_ajax') }}')" class="btn btn-sm btn-info mt-1">Import</button>
                 <a href="{{ url('/stock/create') }}" class="btn btn-sm btn-primary mt-1"> + Add</a>
                 <button onclick="modalAction('{{ url('stock/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Add Ajax</button>
             </div>
@@ -43,7 +44,7 @@
                 $('#myModal').modal('show');
             });
         }
-        var dataStock;
+        var dataStock; // Ensure dataStock is accessible for reload
         $(document).ready(function() {
             dataStock = $('#table_stock').DataTable({
                 serverSide: true,

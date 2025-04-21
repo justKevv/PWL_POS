@@ -77,7 +77,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/list', [CategoryController::class, 'list']);
             Route::get('/import', [CategoryController::class, 'import']);
             Route::post('/import_ajax', [CategoryController::class, 'import_ajax']);
-            
+
             // Add these new AJAX routes
             Route::get('/create_ajax', [CategoryController::class, 'create_ajax']);
             Route::post('/ajax', [CategoryController::class, 'store_ajax']);
@@ -126,6 +126,8 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('stock')->group(function () {
             Route::get('/', [StockController::class, 'index']);
             Route::post('/list', [StockController::class, 'list']);
+            Route::get('/import_ajax', [StockController::class, 'import_ajax']);
+            Route::post('/import_ajax', [StockController::class, 'store_import_ajax']);
 
             // Add these new AJAX routes
             Route::get('/create_ajax', [StockController::class, 'create_ajax']);
