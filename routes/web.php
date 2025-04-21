@@ -50,6 +50,8 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('level')->group(function () {
             Route::get('/', [LevelController::class, 'index']);
             Route::post('/list', [LevelController::class, 'list']);
+            Route::get('/import_ajax', [LevelController::class, 'import_ajax']);
+            Route::post('/import_ajax', [LevelController::class, 'store_import_ajax']);
 
             // Add these new AJAX routes
             Route::get('/create_ajax', [LevelController::class, 'create_ajax']);

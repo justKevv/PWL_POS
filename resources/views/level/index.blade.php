@@ -5,6 +5,7 @@
         <div class="card-header">
             <div class="card-title">{{ $page->title }}</div>
             <div class="card-tools">
+                <button onclick="modalAction('{{ url('/level/import_ajax') }}')" class="btn btn-sm btn-info mt-1">Import Level</button> {{-- Added Import Button --}}
                 <a href="{{ url('/level/create') }}" class="btn btn-sm btn-primary mt-1"> + Add</a>
                 <button onclick="modalAction('{{ url('level/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Add Ajax</button>
             </div>

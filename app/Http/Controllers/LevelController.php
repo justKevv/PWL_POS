@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\LevelModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Validator; // Added
+use PhpOffice\PhpSpreadsheet\IOFactory; // Added
 use Yajra\DataTables\Facades\DataTables;
 
 class LevelController extends Controller
@@ -237,6 +238,147 @@ class LevelController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    /**
+     * Show the form for importing levels via AJAX.
+     */
+    public function import_ajax()
+    {
+        // Simple view return for the modal content
+        return view('level.import_ajax');
+    }
+
+    /**
+     * Handle the AJAX request for importing levels from a file.
+     */
+    public function store_import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if (!$request->hasFile('file_level')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No file uploaded',
+                    'msgField' => ['file_level' => ['Please select a file']]
+                ]);
+            }
+
+            $rules = [
+                'file_level' => ['required', 'mimes:xlsx,xls', 'max:2048']
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation Failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            try {
+                $file = $request->file('file_level');
+                $reader = IOFactory::createReaderForFile($file->getRealPath());
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getRealPath());
+                $sheet = $spreadsheet->getActiveSheet();
+                $data = $sheet->toArray(null, false, true, true);
+
+                $insert = [];
+                $errors = [];
+                $rowCount = 0;
+
+                if (count($data) > 1) {
+                    foreach ($data as $row => $value) {
+                        if ($row > 1) {
+                            $rowCount++;
+                            $rowData = [
+                                'code_level' => $value['A'] ?? null,
+                                'name_level' => $value['B'] ?? null,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ];
+                            $rowValidator = Validator::make($rowData, [
+                                'code_level' => 'required|string|max:3',
+                                'name_level' => 'required|string|max:100',
+                            ]);
+
+                            if ($rowValidator->fails()) {
+                                $errors[] = "Row " . $row . ": " . implode(', ', $rowValidator->errors()->all());
+                            } else {
+                                $insert[] = $rowData;
+                            }
+                        }
+                    }
+                } else {
+                     return response()->json([
+                        'status' => false,
+                        'message' => 'The uploaded file is empty or has only a header row.'
+                    ]);
+                }
+
+                if (!empty($errors)) {
+                     return response()->json([
+                        'status' => false,
+                        'message' => 'Errors found in file data: ' . implode('; ', $errors)
+                    ]);
+                }
+
+                if (count($insert) > 0) {
+                    try {
+                        // LevelModel::insertOrIgnore($insert); // Might be too simple if complex validation needed
+
+                        // More robust: Check existence or use upsert
+                        $insertedCount = 0;
+                        foreach ($insert as $levelData) {
+                            $exists = LevelModel::where('code_level', $levelData['code_level'])->exists();
+                            if (!$exists) {
+                                LevelModel::create($levelData);
+                                $insertedCount++;
+                            }
+                            // Optionally: Update existing records if needed (upsert logic)
+                        }
+
+                        if ($insertedCount > 0) {
+                            return response()->json([
+                                'status' => true,
+                                'message' => $insertedCount . ' level(s) imported successfully out of ' . $rowCount . ' rows processed.'
+                            ]);
+                        } else {
+                             return response()->json([
+                                'status' => false,
+                                'message' => 'No new levels were imported. Duplicates might exist or file was empty after header.'
+                            ]);
+                        }
+
+                    } catch (\Illuminate\Database\QueryException $e) {
+                         return response()->json([
+                            'status' => false,
+                            'message' => 'Database error during import: ' . $e->getMessage()
+                        ]);
+                    }
+
+                } else {
+                     return response()->json([
+                        'status' => false,
+                        'message' => 'No valid data found to import after the header row.'
+                    ]);
+                }
+
+            } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+                 return response()->json([
+                    'status' => false,
+                    'message' => 'Failed to read the file: ' . $e->getMessage(),
+                ]);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Import failed: ' . $e->getMessage(),
+                ]);
+            }
+        }
+        return redirect('/level');
+    }
+
+
     public function destroy(LevelModel $level)
     {
         $level->delete();
