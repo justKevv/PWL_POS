@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\CategoryModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Validator; // Added Validator
+use PhpOffice\PhpSpreadsheet\IOFactory; // Added IOFactory
 use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
@@ -241,6 +242,110 @@ class CategoryController extends Controller
                 return response()->json([
                    'status' => false,
                    'message' => 'Category not found',
+                ]);
+            }
+        }
+        return redirect('/');
+    }
+
+    // New method to show the import modal view
+    public function import() {
+        return view('category.import');
+    }
+
+    // New method to handle the AJAX import request
+    public function import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            if (!$request->hasFile('file_category')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No file uploaded',
+                    'msgField' => ['file_category' => ['Please select a file']]
+                ]);
+            }
+
+            $rules = [
+                'file_category' => ['required', 'mimes:xlsx,xls', 'max:2048'] // Increased max size slightly
+            ];
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation Failed',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+
+            try {
+                $file = $request->file('file_category');
+                $reader = IOFactory::createReaderForFile($file->getRealPath()); // Use createReaderForFile for flexibility
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file->getRealPath());
+                $sheet = $spreadsheet->getActiveSheet();
+                $data = $sheet->toArray(null, false, true, true);
+
+                $insert = [];
+                $errors = [];
+                $rowCount = 0;
+
+                if (count($data) > 1) { // Check if there's more than just the header row
+                    foreach ($data as $row => $value) {
+                        if ($row > 1) { // Start from the second row (skip header)
+                            $rowCount++;
+                            $rowData = [
+                                'code_category' => $value['A'] ?? null, // Use null coalescing for safety
+                                'name_category' => $value['B'] ?? null,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ];
+
+                            if (empty($rowData['code_category']) || empty($rowData['name_category'])) {
+                                $errors[] = "Row " . $row . ": Missing code or name.";
+                                continue;
+                            }
+
+                            $insert[] = $rowData;
+                        }
+                    }
+
+                    if (!empty($errors)) {
+                         return response()->json([
+                            'status' => false,
+                            'message' => 'Import failed due to data errors: ' . implode(' ', $errors),
+                        ]);
+                    }
+
+                    if (count($insert) > 0) {
+                        CategoryModel::insertOrIgnore($insert);
+                        return response()->json([
+                            'status' => true,
+                            'message' => count($insert) . ' categories imported successfully.'
+                        ]);
+                    } else {
+                         return response()->json([
+                            'status' => false,
+                            'message' => 'No valid category data found in the file to import.'
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'The uploaded file is empty or contains only a header row.'
+                ]);
+            } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+                 return response()->json([
+                    'status' => false,
+                    'message' => 'Error reading file: ' . $e->getMessage(),
+                ]);
+            }
+
+            catch (\Exception $e) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Import failed due to an unexpected error.',
                 ]);
             }
         }

@@ -5,6 +5,7 @@
         <div class="card-header">
             <div class="card-title">{{ $page->title }}</div>
             <div class="card-tools">
+                <button onclick="modalAction('{{ url('/category/import') }}')" class="btn btn-sm btn-info mt-1">Import Category</button>
                 <a href="{{ url('/category/create') }}" class="btn btn-sm btn-primary mt-1"> + Add</a>
                 <button onclick="modalAction('{{ url('category/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Add Ajax</button>
             </div>

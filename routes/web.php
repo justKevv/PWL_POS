@@ -75,7 +75,9 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('category')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
             Route::post('/list', [CategoryController::class, 'list']);
-
+            Route::get('/import', [CategoryController::class, 'import']);
+            Route::post('/import_ajax', [CategoryController::class, 'import_ajax']);
+            
             // Add these new AJAX routes
             Route::get('/create_ajax', [CategoryController::class, 'create_ajax']);
             Route::post('/ajax', [CategoryController::class, 'store_ajax']);
