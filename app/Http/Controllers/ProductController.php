@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\CategoryModel;
 use App\Models\ProductModel;
+use Barryvdh\DomPDF\Facade\Pdf as Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Yajra\DataTables\Facades\DataTables;
 
 class ProductController extends Controller
@@ -368,5 +370,72 @@ class ProductController extends Controller
             }
         }
         return redirect('/');
+    }
+
+    public function export_excel() {
+        $product = ProductModel::select('id_category', 'product_code', 'product_name', 'purchase_price','selling_price')
+            ->orderBy('id_category')
+            ->with('category')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('A1', 'ID Category');
+        $sheet->setCellValue('B1', 'Product Code');
+        $sheet->setCellValue('C1', 'Product Name');
+        $sheet->setCellValue('D1', 'Purchase Price');
+        $sheet->setCellValue('E1', 'Selling Price');
+        $sheet->setCellValue('F1', 'Category Name');
+
+        $sheet->getStyle('A1:F1')->getFont()->setBold(true);
+
+        $num = 1;
+        $row = 2;
+
+        foreach ($product as $key => $value) {
+            $sheet->setCellValue('A' . $row, $value->id_category);
+            $sheet->setCellValue('B' . $row, $value->product_code);
+            $sheet->setCellValue('C' . $row, $value->product_name);
+            $sheet->setCellValue('D' . $row, $value->purchase_price);
+            $sheet->setCellValue('E'. $row, $value->selling_price);
+            $sheet->setCellValue('F'. $row, $value->category->name_category);
+            $row++;
+            $num++;
+        }
+
+        foreach (range('A', 'F') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $sheet->setTitle('Product Data');
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $filename = 'Product Data ' . date('Y-m-d H:i:s') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        header('Cache-Control: max-age=1');
+        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('Cache-Control: cache, must-revalidate');
+        header('Pragma: public');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    public function export_pdf() {
+        $products = ProductModel::select('id_category', 'product_code', 'product_name', 'purchase_price','selling_price')
+            ->orderBy('id_category')
+            ->with('category')
+            ->get();
+
+        $pdf = Pdf::loadView('product.export_pdf', compact('products'));
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOption('isRemoteEnabled', true);
+        $pdf->render();
+
+        return $pdf->stream('Product Data '.date('Y-m-d H:i:s').'.pdf');
     }
 }
