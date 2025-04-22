@@ -103,6 +103,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/getNextId/{category}', [ProductController::class, 'getNextId']);
             Route::get('/import', [ProductController::class, 'import']);
             Route::post('/import_ajax', [ProductController::class, 'import_ajax']);
+            Route::get('/export_excel', [ProductController::class, 'export_excel']);
+            Route::get('/export_pdf', [ProductController::class, 'export_pdf']); 
 
             // Add these new AJAX routes
             Route::get('/create_ajax', [ProductController::class, 'create_ajax']);
