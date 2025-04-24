@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('username', 20)->unique();
             $table->string('name', 100);
             $table->string('password');
+            $table->string('profile_image')->nullable();
             $table->timestamps();
 
             $table->foreign('id_level')->references('id_level')->on('m_level');
@@ -28,6 +29,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('m_user');
+        Schema::table('m_user', function (Blueprint $table) { // Add this to safely drop column if needed
+            $table->dropForeign(['id_level']); // Drop foreign key first
+            $table->dropColumn('profile_image');
+        });
+        Schema::dropIfExists('m_user'); // Keep original drop table
     }
 };

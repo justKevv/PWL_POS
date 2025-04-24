@@ -22,6 +22,9 @@ Route::post('register', [AuthController::class, 'postRegister']);
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [WelcomeController::class, 'index']);
 
+    // Add this route for profile photo update
+    Route::post('/profile/photo', [UserController::class, 'updateProfilePhoto'])->name('profile.photo.update');
+
     Route::middleware(['authorize:ADM'])->group(function () {
         Route::prefix('user')->group(function () {
             Route::get('/', [UserController::class, 'index']);
@@ -104,7 +107,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/import', [ProductController::class, 'import']);
             Route::post('/import_ajax', [ProductController::class, 'import_ajax']);
             Route::get('/export_excel', [ProductController::class, 'export_excel']);
-            Route::get('/export_pdf', [ProductController::class, 'export_pdf']); 
+            Route::get('/export_pdf', [ProductController::class, 'export_pdf']);
 
             // Add these new AJAX routes
             Route::get('/create_ajax', [ProductController::class, 'create_ajax']);

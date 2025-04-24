@@ -1,12 +1,34 @@
 <div class="sidebar">
     <!-- Sidebar user (optional) -->
-    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-      <div class="image">
-        <img src="{{ asset('adminlte/dist/img/user2-160x160.jpg') }}" class="img-circle elevation-2" alt="User Image">
-      </div>
-      <div class="info">
-        <a href="#" class="d-block">Alexander Pierce</a>
-      </div>
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex flex-column align-items-center"> {{-- Modified for centering --}}
+        <div class="image mb-2"> {{-- Added margin bottom --}}
+            {{-- Display user image or default --}}
+            <img src="{{ Auth::user()->profile_image ? Storage::url(Auth::user()->profile_image) : asset('adminlte/dist/img/user2-160x160.jpg') }}"
+                 class="img-circle elevation-2" alt="User Image" style="width: 60px; height: 60px; object-fit: cover;"> {{-- Added style --}}
+        </div>
+        <div class="info mb-2 text-center"> {{-- Added margin bottom and text center --}}
+            {{-- Display user name --}}
+            <a href="#" class="d-block">{{ Auth::user()->name }}</a>
+        </div>
+        {{-- Simple Form for Profile Photo Upload --}}
+        <form action="{{ route('profile.photo.update') }}" method="POST" enctype="multipart/form-data" class="w-100 px-2"> {{-- Added width and padding --}}
+            @csrf
+            <div class="input-group input-group-sm">
+                <input type="file" name="profile_photo" class="form-control form-control-sm" required>
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i></button>
+                </div>
+            </div>
+             @error('profile_photo') {{-- Display validation error --}}
+                <small class="text-danger d-block mt-1">{{ $message }}</small>
+            @enderror
+            @if (session('success')) {{-- Display success message --}}
+                 <small class="text-success d-block mt-1">{{ session('success') }}</small>
+            @endif
+             @if (session('error')) {{-- Display error message --}}
+                 <small class="text-danger d-block mt-1">{{ session('error') }}</small>
+            @endif
+        </form>
     </div>
 
     <!-- SidebarSearch Form -->

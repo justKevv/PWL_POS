@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Auth; // Add Auth facade
+use Illuminate\Support\Facades\Storage; // Add Storage facade
 
 class UserController extends Controller
 {
@@ -383,5 +385,34 @@ class UserController extends Controller
             }
         }
         return redirect('/');
+    }
+
+    /**
+     * Update the user's profile photo.
+     */
+    public function updateProfilePhoto(Request $request)
+    {
+        $request->validate([
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validate the image
+        ]);
+
+        $user = Auth::user(); // Get the authenticated user
+
+        if ($request->hasFile('profile_photo')) {
+            // Delete old photo if it exists and is not the default
+            if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
+                 Storage::disk('public')->delete($user->profile_image);
+            }
+
+            // Store the new photo in storage/app/public/profile_images
+            $path = $request->file('profile_photo')->store('profile_images', 'public');
+
+            // Update the user's profile_image path in the database
+            $user->update(['profile_image' => $path]);
+
+            return back()->with('success', 'Profile photo updated successfully.');
+        }
+
+        return back()->with('error', 'Failed to upload profile photo.');
     }
 }

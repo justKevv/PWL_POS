@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
                 'id_level' => 1,
                 'username' => 'admin',
                 'name' => 'Administrator',
-                'password' => Hash::make('12345'),
+                'password' => Hash::make('123456'),
             ],
             [
                 'id_user' => 2,
